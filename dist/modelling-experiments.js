@@ -23,8 +23,8 @@ const support = experiment([
     chart: continuous('Value (common model scale)', -1.5, 3, [line(model.label, curve(-1.5, 3, model.pdf))], {
       cuts: data === 'error' ? [] : [cut(0, 'Lower bound'), ...(data === 'fraction' ? [cut(1, 'Upper bound')] : [])]
     }),
-    metrics: [metric('Candidate’s support', model.support), metric('Impossible under the quantity’s bounds', pct(outside))],
-    note: data === 'error' && kind !== 'normal' ? 'This candidate excludes negative errors, which the measurement can produce.' : 'The examples use a common numerical scale to compare model supports.'
+    metrics: [metric('Values the model allows', model.support), metric('Probability outside bounds', pct(outside))],
+    note: data === 'error' && kind !== 'normal' ? 'This candidate excludes negative errors, which the measurement can produce.' : ''
   };
 });
 
@@ -61,7 +61,7 @@ const fit = experiment([sampleSize(20)], ({ n }, seed) => {
       line('Fitted normal', curve(0, 60, x => normalPdf(x, center, spread)), 'secondary'),
       line('Generating model', curve(0, 60, x => normalPdf(x, 30, 6)), 'neutral', true)
     ]),
-    metrics: [metric('Fitted mean (true 30)', num(center)), metric('Fitted spread (true 6)', num(spread))]
+    metrics: [metric('Fitted mean', num(center)), metric('Fitted standard deviation', num(spread))]
   };
 }, true);
 
@@ -131,7 +131,8 @@ const dependence = experiment([
       line('Independent reference', curve(0, 78, x => normalPdf(x, center, base)), 'secondary', true)
     ], { cuts: [cut(t, 'Deadline')] }),
     metrics: [metric('Chance of missing deadline', pct(normalTail(t, center, spread))),
-      metric('Independent reference', pct(normalTail(t, center, base))), metric('Total standard deviation', num(spread) + ' min')]
+      metric('Independent reference', pct(normalTail(t, center, base))), metric('Total standard deviation', num(spread) + ' min')],
+    note: 'Both curves have a total mean of 36 minutes.'
   };
 });
 
@@ -154,7 +155,7 @@ function weatherModel(rain, gap, group, isCondition) {
 }
 
 const condition = experiment([
-  range('rain', 'Chance of rain', 0, 100, 5, 30, '%'),
+  range('rain', 'Chance of rain', 5, 95, 5, 30, '%'),
   select('group', 'What you know', [['all', 'Weather unknown'], ['low', 'Dry day'], ['high', 'Rainy day']], 'all')
 ], ({ rain, group }) => weatherModel(rain, 15, group, true));
 const mixture = experiment([

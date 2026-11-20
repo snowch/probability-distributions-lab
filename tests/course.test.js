@@ -33,7 +33,8 @@ test('all experiment defaults, endpoints, and selectable views produce finite ch
     for (const control of model.controls) {
       const options = control.options?.map(([value]) => value) ?? [control.min, control.max];
       for (const value of options) {
-        variants.push({ ...defaults, ...(control.when ? { scenario: control.when } : {}), [control.key]: value });
+        const dependency = control.showWhen;
+        variants.push({ ...defaults, ...(dependency ? { [dependency[0]]: dependency[1] } : {}), [control.key]: value });
       }
     }
     for (const values of variants) {

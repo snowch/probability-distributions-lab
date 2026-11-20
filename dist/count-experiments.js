@@ -2,9 +2,10 @@ import { binomial, choose, cumsum, hypergeometric, poisson, random, seq, sumFrom
 import { bars, discrete, experiment, marks, metric, num, pct, points, range, select, steps } from './experiment-utils.js';
 
 const chance = (value = 50) => range('p', 'Chance of success', 5, 95, 5, value, '%');
+const headsChance = () => range('p', 'Chance of heads per flip', 5, 95, 5, 50, '%');
 const flips = (value = 10) => range('n', 'Flips in each round', 1, 20, 1, value);
 const sizes = [[20, '20 rounds'], [200, '200 rounds'], [2000, '2,000 rounds']];
-const fixedRounds = select('rounds', 'Simulated sample', sizes, 20);
+const fixedRounds = select('rounds', 'Sample size', sizes, 20);
 
 function highlight(mass, selected, start = 0) {
   return points(mass, start).map(point => ({ ...point, active: selected(point.x) }));
@@ -30,15 +31,15 @@ function compare(label, mass, first, rounds, seed) {
     ]),
     metrics: [
       metric('Rounds', num(rounds)),
-      metric('Expected value', num(mass.reduce((sum, p, i) => sum + (i + first) * p, 0))),
-      metric('Largest gap', pct(Math.max(...observed.map((share, i) => Math.abs(share - mass[i]))))),
+      metric('Model mean', num(mass.reduce((sum, p, i) => sum + (i + first) * p, 0))),
+      metric('Largest gap', num(100 * Math.max(...observed.map((share, i) => Math.abs(share - mass[i])))) + ' percentage points'),
     ]
   };
 }
 
 const trial = experiment([
   select('kind', 'One round', [['coin', 'One coin toss'], ['die', 'One die roll'], ['flips', 'Several coin flips']], 'flips'),
-  flips(3), fixedRounds
+  { ...flips(3), showWhen: ['kind', 'flips'] }, fixedRounds
 ], ({ kind, n, rounds }, seed) => {
   switch (kind) {
     case 'coin': return compare('Heads in one toss', [.5, .5], 0, rounds, seed);
@@ -57,7 +58,7 @@ const dice = experiment([range('k', 'Target total', 2, 12, 1, 7)], ({ k }) => {
   };
 });
 
-const mass = experiment([flips(3), chance(), range('k', 'Highlight a head count', 0, 20, 1, 2)], ({ n, p, k }) => {
+const mass = experiment([flips(3), headsChance(), range('k', 'Highlight a head count', 0, 20, 1, 2)], ({ n, p, k }) => {
   const probabilities = binomial(n, p / 100);
   return {
     chart: discrete('Heads in one round', 0, n, [bars('Probability mass', highlight(probabilities, x => x === k))]),
@@ -66,10 +67,10 @@ const mass = experiment([flips(3), chance(), range('k', 'Highlight a head count'
   };
 });
 
-const binomialExperiment = experiment([flips(), chance(), fixedRounds], ({ n, p, rounds }, seed) =>
+const binomialExperiment = experiment([flips(), headsChance(), fixedRounds], ({ n, p, rounds }, seed) =>
   compare('Heads in one round', binomial(n, p / 100), 0, rounds, seed), true);
 
-const discreteCdf = experiment([chance(), range('k', 'At most this many heads', 0, 10, 1, 5)], ({ p, k }) => {
+const discreteCdf = experiment([headsChance(), range('k', 'At most this many heads', 0, 10, 1, 5)], ({ p, k }) => {
   const pmf = binomial(10, p / 100);
   const cdf = cumsum(pmf);
   const nodes = [{ x: -.5, y: 0 }, ...points(cdf), { x: 10.5, y: 1 }];
@@ -81,8 +82,8 @@ const discreteCdf = experiment([chance(), range('k', 'At most this many heads', 
 
 const evidence = experiment([
   select('n', 'Number of flips', [[10, '10'], [20, '20'], [50, '50'], [100, '100']], 10),
-  range('k', 'Heads threshold', 50, 90, 5, 70, '%'),
-  range('p', 'Biased model’s chance of heads', 55, 85, 5, 70, '%')
+  range('k', 'Minimum share of heads', 50, 90, 5, 70, '%'),
+  range('p', 'Chance of heads for biased coin', 55, 85, 5, 70, '%')
 ], ({ n, k, p }) => {
   const first = binomial(n, .5);
   const second = binomial(n, p / 100);
@@ -113,7 +114,7 @@ const geometric = experiment([chance(20), range('k', 'Attempt to inspect', 1, 20
   };
 });
 
-const hyper = experiment([range('n', 'Parts inspected out of 20', 1, 20, 1, 8), range('k', 'Faulty count to inspect', 0, 20, 1, 5)], ({ n, k }) => {
+const hyper = experiment([range('n', 'Parts inspected out of 20', 1, 20, 1, 8), range('k', 'Faulty parts to compare', 0, 20, 1, 5)], ({ n, k }) => {
   const without = hypergeometric(20, 4, n);
   const withReplacement = binomial(n, .2);
   return {
@@ -122,7 +123,7 @@ const hyper = experiment([range('n', 'Parts inspected out of 20', 1, 20, 1, 8), 
   };
 });
 
-const poissonExperiment = experiment([range('rate', 'Expected chats per hour', 1, 12, .5, 4), range('k', 'Busy-hour threshold', 1, 25, 1, 8)], ({ rate, k }) => {
+const poissonExperiment = experiment([range('rate', 'Expected chats per hour', 1, 12, .5, 4), range('k', 'Minimum chats for a busy hour', 1, 25, 1, 8)], ({ rate, k }) => {
   const masses = poisson(rate, 70);
   return {
     chart: discrete('Chats in an hour', 0, 25, [bars('Exact probability', highlight(masses.slice(0, 26), x => x >= k))]),
@@ -144,7 +145,7 @@ const counts = experiment([select('kind', 'Scenario', [
   const item = cases[kind];
   return {
     chart: discrete(item.label, item.first, item.first + item.mass.length - 1, [bars('Model probability', points(item.mass, item.first))]),
-    metrics: [metric('Candidate model', item.name)],
+    metrics: [metric('Candidate model', item.name), metric('First possible count', item.first)],
     note: item.key + '.'
   };
 });

@@ -83,42 +83,39 @@ function renderHome() {
     <div class="home">
       <section class="hero" aria-labelledby="home-title">
         <div>
-          <p class="eyebrow">A hands-on probability course</p>
           <h1 id="home-title">Probability Distributions Lab</h1>
-          <p>Start with coin flips. Learn to read, choose, and test distributions for the decisions you actually need to make.</p>
+          <p>Start with coin flips and learn to read, choose, and test distributions. Basic probability is enough to get started.</p>
           <div class="hero-actions">
             <a href="${lessonUrl(next)}" class="button">${callToAction}</a>
-            <a href="#curriculum" class="button-secondary">Explore the outline</a>
           </div>
         </div>
         <div class="hero-chart">
-          <div class="hero-chart-head"><strong>Heads in 10 fair flips</strong><span>5 heads · 24.6%</span></div>
+          <div class="hero-chart-head"><strong>Heads in 10 fair flips</strong><span>Exactly 5 heads · 24.6%</span></div>
           <svg class="data-chart" role="img"></svg>
         </div>
       </section>
       <div class="course-facts">
         <span><strong>8</strong> units</span><span><strong>48</strong> interactive lessons</span><span>Optional Python in your browser</span>${progress}
       </div>
+      <details class="primer"><summary>Review probability basics</summary>
+        <dl>
+          <dt>Trial and outcome</dt><dd>A trial is one complete run of the experiment. An outcome is what that run produces.</dd>
+          <dt>Probability</dt><dd>A probability is between 0 and 1. For outcomes that are equally likely, count the matching cases and divide by the total number of cases.</dd>
+          <dt>Complement</dt><dd>If an event has probability 0.2, its complement has probability 0.8. Between them they cover all outcomes.</dd>
+          <dt>Independence</dt><dd>Two events are independent if knowing one occurred leaves the chance of the other unchanged. Multiply their probabilities to find the chance that both occur.</dd>
+          <dt>Conditional probability</dt><dd>When you know a condition holds, count only the cases that meet it. For example, to estimate the chance of rain given a cloudy morning, divide rainy days with cloudy mornings by all days with cloudy mornings.</dd>
+        </dl>
+      </details>
       <section id="curriculum" class="curriculum" aria-labelledby="outline-title">
         <div class="outline-header">
-          <div><p class="eyebrow">Course outline</p><h2 id="outline-title">From outcomes to decisions</h2>
-            <p>Work through in order or look up a distribution you want to understand.</p></div>
-          <label class="search-label" for="lesson-search">Find a lesson
-            <input type="search" id="lesson-search" placeholder="Try “binomial” or “tails”" autocomplete="off">
+          <h2 id="outline-title">Course outline</h2>
+          <label class="search-label" for="lesson-search">Search lessons
+            <input type="search" id="lesson-search" placeholder="Try “binomial” or “waiting time”" autocomplete="off">
           </label>
         </div>
         <p id="search-status" role="status" hidden></p>
         <div class="unit-grid" id="unit-grid"></div>
       </section>
-      <details class="primer"><summary>Optional refresher · Probability essentials</summary>
-        <dl>
-          <dt>Trial and outcome</dt><dd>A trial is one complete run of the experiment. An outcome is what that run produces.</dd>
-          <dt>Probability</dt><dd>A probability is between 0 and 1. For outcomes that are equally likely, count the matching cases and divide by the total number of cases.</dd>
-          <dt>Complement</dt><dd>If an event has probability 0.2, its complement has probability 0.8. Between them they cover all outcomes.</dd>
-          <dt>Independence</dt><dd>If learning the result of one event leaves the other’s chance unchanged, their joint chance is the product of their individual chances.</dd>
-          <dt>Conditional probability</dt><dd>When you know something about a trial, limit attention to trials that match that information. The chance of rain among all days can differ from the chance of rain among cloudy days.</dd>
-        </dl>
-      </details>
     </div>`;
   outline();
   const svg = query('.hero-chart svg');
@@ -133,7 +130,6 @@ function renderHome() {
 
 function sideNav(lesson, unit) {
   return `<aside class="lesson-side"><div class="side-inner">
-    <a class="back-link" href="#curriculum">Course outline</a>
     <p class="eyebrow">Unit ${ordinal(unit.number)} of ${ordinal(units.length)}</p>
     <h2 class="unit-label">${html(unit.title)}</h2>
     <details class="lesson-menu"${matchMedia('(min-width: 691px)').matches ? ' open' : ''}>
@@ -156,7 +152,8 @@ function controlsMarkup(controls) {
       ? '<select id="' + id + '">' + control.options.map(([value, description]) =>
         '<option value="' + html(value) + '"' + (value === control.value ? ' selected' : '') + '>' + html(description) + '</option>').join('') + '</select>'
       : '<input id="' + id + '" type="range" min="' + control.min + '" max="' + control.max + '" step="' + control.step + '" value="' + control.value + '">';
-    return '<div class="control" data-control="' + index + '"><label for="' + id + '">' + label + output + '</label>' + field + '</div>';
+    return '<div class="control" data-control="' + index + '"><div><label for="' + id + '">' +
+      label + '</label>' + output + '</div>' + field + '</div>';
   }).join('');
 }
 
@@ -164,9 +161,7 @@ function experimentUI(lesson, settings) {
   const controls = Array.from(main.querySelectorAll('[data-control]'));
   const svg = query('#experiment-svg');
   const run = query('#resample');
-  const seedLabel = query('#seed');
-  const resampleArea = query('.chart-actions');
-  let seed = 500 + lesson.number;
+  let seed = settings.seed ?? (500 + lesson.number);
   let chart;
   let scheduled = 0;
   const values = Object.fromEntries(settings.controls.map(control => [control.key, control.value]));
@@ -193,12 +188,9 @@ function experimentUI(lesson, settings) {
   }
   function redrawControls() {
     controls.forEach((wrapper, index) => {
-      const specification = settings.controls[index];
-      wrapper.hidden = Boolean(specification.when && values.scenario !== specification.when);
+      const condition = settings.controls[index].showWhen;
+      wrapper.hidden = Boolean(condition && values[condition[0]] !== condition[1]);
     });
-    const canResample = typeof settings.resample === 'function' ? settings.resample(values) : settings.resample;
-    resampleArea.hidden = !canResample;
-    seedLabel.textContent = 'Sample seed ' + seed;
   }
   function schedule() {
     if (!scheduled) scheduled = requestAnimationFrame(render);
@@ -215,7 +207,7 @@ function experimentUI(lesson, settings) {
       schedule();
     });
   });
-  run.addEventListener('click', () => {
+  run?.addEventListener('click', () => {
     seed++;
     schedule();
   });
@@ -245,7 +237,7 @@ function mountDraft() {
   editor.value = read('capstone', draftTemplate);
   editor.addEventListener('input', () => {
     const saved = write('capstone', editor.value);
-    status.textContent = saved ? 'Draft saved in this browser.' : 'Browser storage is unavailable. Download your draft to keep it.';
+    status.textContent = saved ? 'Draft saved in this browser.' : 'Click Download draft to keep a copy. This browser could not save it.';
   });
   query('#download-draft').addEventListener('click', () => {
     const url = URL.createObjectURL(new Blob(['# Probability Distributions Lab capstone\n\n', editor.value], { type: 'text/markdown' }));
@@ -269,16 +261,19 @@ function renderLesson(lesson) {
     ${sideNav(lesson, unit)}
     <article class="lesson-content">
       <header class="lesson-heading">
-        <p class="eyebrow">Lesson ${ordinal(lesson.number)} · ${html(unit.title)}</p>
+        <p class="eyebrow">Lesson ${ordinal(lesson.number)} of ${lessons.length}</p>
         <h1 id="lesson-title" tabindex="-1">${html(lesson.title)}</h1>
         <p>${html(lesson.intro)}</p>
       </header>
       <section class="lesson-idea"><h2>The idea</h2><p>${html(lesson.idea)}</p></section>
       <section class="predict"><h2>Make a prediction</h2><p>${html(lesson.predict)}</p></section>
       <section class="workbench" aria-labelledby="experiment-title">
-        <h2 id="experiment-title">Run the experiment</h2><p>${html(lesson.explore)}</p>
+        <h2 id="experiment-title">Experiment</h2><p>${html(lesson.explore)}</p>
         <div class="control-grid">${controlsMarkup(settings.controls)}</div>
-        <div class="chart-actions" hidden><button id="resample" class="button-secondary" type="button">Resample</button><p id="seed"></p></div>
+        ${settings.resample ? `<div class="chart-actions">
+          <button id="resample" class="button-secondary" type="button">New sample</button>
+          <p>Changes to settings update the chart. New sample generates another sample.</p>
+        </div>` : ''}
         <div class="experiment-chart">
           <svg id="experiment-svg" class="data-chart" role="img"></svg>
           <div id="legend" class="chart-legend"></div>
@@ -288,7 +283,9 @@ function renderLesson(lesson) {
       </section>
       <details class="check"><summary>Check your prediction</summary><p>${html(lesson.answer)}</p></details>
       ${python ? `<details class="python-panel">
-        <summary>Explore in Python</summary><p>${html(python.prompt)}</p>
+        <summary>Explore in Python</summary>
+        <p>The editor contains a complete example. Click <strong>Run Python</strong> before editing it. Run again after each change to update the results below the editor.</p>
+        <p>${html(python.prompt)}</p>
         <label class="code-label" for="python-code">Python code</label>
         <textarea id="python-code" class="code-editor" rows="12" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
         <div class="python-buttons">
@@ -296,12 +293,12 @@ function renderLesson(lesson) {
           <button id="python-stop" class="button-secondary" type="button" hidden>Stop run</button>
           <button id="python-reset" class="button-quiet" type="button">Restore example</button>
         </div>
-        <p id="python-status" class="python-status" role="status">The first run loads Python and its packages.</p>
+        <p id="python-status" class="python-status" role="status" hidden></p>
         <pre id="python-output" class="python-output" aria-label="Python output" hidden></pre>
         <div id="python-figures" class="python-figures"></div>
       </details>` : ''}
       ${lesson.model === 'capstone' ? `<section class="capstone-draft">
-        <h2>Capstone draft</h2><p>Use this draft for both capstone lessons. Include enough detail to reproduce your comparison.</p>
+        <h2>Capstone draft</h2><p>The page saves edits in this browser and opens the same draft in both capstone lessons.</p>
         <label for="draft" class="code-label">Your investigation</label>
         <textarea id="draft"></textarea>
         <div class="draft-buttons"><button id="download-draft" class="button-secondary" type="button">Download draft</button>

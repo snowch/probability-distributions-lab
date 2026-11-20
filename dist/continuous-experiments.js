@@ -21,8 +21,7 @@ const measure = experiment([range('time', 'Reported wait', 1, 14, .5, 4, ' min')
   const probability = expCdf(high, rate) - expCdf(low, rate);
   return {
     chart: densityChart('Actual wait (minutes)', 0, 16, x => expPdf(x, rate), low, high, [cut(low), cut(high)]),
-    metrics: [metric('Actual interval', num(low, 3) + '–' + num(high, 3) + ' min'), metric('Probability of that reading', pct(probability))],
-    note: 'This continuous model gives probability zero to any one exact time.'
+    metrics: [metric('Actual interval', num(low, 3) + '–' + num(high, 3) + ' min'), metric('Probability of that reading', pct(probability))]
   };
 });
 
@@ -102,14 +101,14 @@ const threeViews = experiment([
   const observed = values.filter(x => x >= lo && x <= hi).length / values.length;
   return {
     chart: charts[view](),
-    metrics: [metric('Observed fraction', pct(observed)), metric('Area under the density', pct(fn(hi) - fn(lo))),
-      metric('Difference in CDF values', pct(fn(hi) - fn(lo)))]
+    metrics: [metric('Observed share', pct(observed)), metric('Area under the density', pct(fn(hi) - fn(lo))),
+      metric('Difference in cumulative probability', pct(fn(hi) - fn(lo)))]
   };
 }, true);
 
 const uniform = experiment([
   range('end', 'Minutes between shuttles', 3, 24, 1, 12, ' min'),
-  range('t', 'Maximum wait of interest', 0, 24, 1, 3, ' min')
+  range('t', 'Wait threshold', 0, 24, 1, 3, ' min')
 ], ({ end, t }) => {
   const inside = Math.min(t, end);
   const nodes = [{ x: 0, y: 1 / end }, { x: end, y: 1 / end }, { x: end, y: 0 }, { x: 26, y: 0 }];
@@ -128,7 +127,7 @@ const normal = experiment([
 ], ({ mu, sigma, t }) => ({
   chart: densityChart('Delivery time (minutes)', -20, 85, x => normalPdf(x, mu, sigma), t, 85, [cut(t, 'Threshold')]),
   metrics: [metric('Chance above threshold', pct(normalTail(t, mu, sigma))), metric('Chance below threshold', pct(normalCdf(t, mu, sigma))),
-    metric('Threshold above the mean', num((t - mu) / sigma) + ' SD')]
+    metric('Standard deviations from the mean', num((t - mu) / sigma))]
 }));
 
 const exponential = experiment([
@@ -177,7 +176,7 @@ const beta = experiment([
     chart: continuous('Possible defect rate', 0, 1, [
       line('Beta density', curve(0, 1, x => betaPdf(x, p * total, (1 - p) * total)))
     ], { cuts: [cut(clamp(p, 0, 1), 'Mean')], xPercent: true }),
-    metrics: [metric('Mean defect rate', pct(p)), metric('Standard deviation', pct(Math.sqrt(p * (1 - p) / (total + 1))) + ' of full scale'),
+    metrics: [metric('Mean defect rate', pct(p)), metric('Standard deviation', num(100 * Math.sqrt(p * (1 - p) / (total + 1))) + ' percentage points'),
       metric('Shape parameters', 'α = ' + num(p * total) + ', β = ' + num((1 - p) * total))]
   };
 });

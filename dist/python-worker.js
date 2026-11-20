@@ -29,11 +29,11 @@ self.addEventListener('message', async ({ data }) => {
   let py;
   let namespace;
   try {
-    if (!runtime) status('Loading the browser Python runtime…');
+    if (!runtime) status('Loading Python in your browser…');
     py = await getRuntime();
-    status('Preparing Python packages…');
+    status('Loading the libraries this example uses…');
     await loadPackages(py, packages, code);
-    status('Running the experiment…');
+    status('Running your Python code…');
     py.setStdout({ batched: line => output.push(line) });
     py.setStderr({ batched: line => output.push(line) });
     const dict = py.globals.get('dict');

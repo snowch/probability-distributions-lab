@@ -41,7 +41,6 @@ small { color: var(--muted); }
 .global-nav { display: flex; align-items: center; gap: clamp(.75rem, 3vw, 1.65rem); font-size: .9rem; }
 .global-nav a { text-decoration: none; font-weight: 700; }
 .global-nav a:hover { text-decoration: underline; }
-.header-action { padding: .62rem .9rem; border: 1px solid var(--line); border-radius: 8px; }
 .hero {
   display: grid;
   grid-template-columns: 1.08fr .92fr;
@@ -85,7 +84,6 @@ small { color: var(--muted); }
 .curriculum { scroll-margin-top: 1rem; padding: 2.65rem 0 1.75rem; }
 .outline-header { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1.2rem; }
 .outline-header h2 { font-size: clamp(1.9rem, 3.4vw, 3rem); line-height: 1.05; margin: .35rem 0 .45rem; }
-.outline-header p:last-child { color: var(--muted); }
 .search-label { display: grid; gap: .35rem; color: var(--muted); font-weight: 700; font-size: .9rem; }
 .search-label input { min-height: 44px; min-width: min(250px, 74vw); }
 .unit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
@@ -98,7 +96,7 @@ small { color: var(--muted); }
 .lesson-list a:hover { color: var(--accent); text-decoration: underline; }
 .lesson-index { color: var(--accent); font: 500 .77rem var(--mono); }
 .progress-text { font: 500 .75rem/1.4 var(--mono); color: var(--accent); }
-.primer { background: #e7f1f6; border: 1px solid #d5e5ee; color: var(--indigo); margin: 0 0 2.75rem; border-radius: 12px; padding: .92rem 1.15rem; }
+.primer { background: #e7f1f6; border: 1px solid #d5e5ee; color: var(--indigo); margin-top: .9rem; border-radius: 12px; padding: .92rem 1.15rem; }
 .primer summary, .check summary, .python-panel summary, .lesson-menu summary { cursor: pointer; font-weight: 700; }
 .primer dl { margin: 1rem 0 .2rem; display: grid; gap: .55rem; }
 .primer dt { font-weight: 700; }
@@ -109,7 +107,6 @@ small { color: var(--muted); }
 .lesson-shell { display: grid; grid-template-columns: minmax(200px, 259px) minmax(0, 1fr); gap: clamp(1.2rem, 4vw, 3rem); padding-top: 2rem; padding-bottom: 3.2rem; }
 .lesson-side { align-self: start; }
 .side-inner { position: sticky; top: 1rem; padding-right: 1.12rem; border-right: 1px solid var(--line); }
-.back-link { display: inline-block; color: var(--accent); font-weight: 700; margin-bottom: .85rem; font-size: .9rem; }
 .unit-label { font-size: 1.08rem; margin: .4rem 0 .68rem; }
 .lesson-menu { color: var(--ink); }
 .lesson-menu .lesson-list { margin-top: .25rem; }
@@ -138,7 +135,7 @@ input[type="search"], select, textarea {
 select { width: 100%; min-width: 0; min-height: 39px; }
 input[type="range"] { width: 100%; margin: 0; min-height: 37px; accent-color: var(--accent); }
 .chart-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin-top: .8rem; }
-.chart-actions p { font: .77rem var(--mono); color: var(--muted); }
+.chart-actions p { font-size: .875rem; color: var(--muted); }
 .experiment-chart { padding: .85rem 0 .25rem; margin-top: .8rem; border-top: 1px solid var(--line); min-width: 0; }
 .data-chart { display: block; width: 100%; height: 276px; overflow: hidden; }
 .chart-grid { stroke: var(--chart-grid, #dfebf0); stroke-width: 1; }
@@ -207,7 +204,6 @@ input[type="range"] { width: 100%; margin: 0; min-height: 37px; accent-color: va
   .header-inner, .home, .lesson-shell, .site-footer { width: calc(100% - 24px); }
   .header-inner { min-height: 63px; gap: .45rem; }
   .global-nav a { font-size: .84rem; }
-  .global-nav .header-action { display: none; }
   .hero { margin-top: 18px; padding: 1.12rem; border-radius: 15px; }
   .hero-chart { padding: .5rem .2rem; }
   .hero-chart-head { padding-inline: .45rem; }

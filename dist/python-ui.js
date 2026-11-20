@@ -53,31 +53,44 @@ export function mountPython(container, example, storage) {
   let running = false;
   const figureUrls = [];
   editor.value = storage.read();
-  editor.addEventListener('input', () => storage.write(editor.value));
+  function report(message) {
+    status.hidden = false;
+    status.textContent = message;
+  }
+  function clearResults() {
+    output.hidden = true;
+    figures.replaceChildren();
+    figureUrls.splice(0).forEach(url => URL.revokeObjectURL(url));
+  }
+  editor.addEventListener('input', () => {
+    storage.write(editor.value);
+    status.classList.remove('error');
+    if (!output.hidden || figures.children.length) {
+      clearResults();
+      report('Click Run Python to see results for your edits.');
+    }
+  });
   reset.addEventListener('click', () => {
     editor.value = example.code;
     storage.write(editor.value);
     editor.focus();
+    clearResults();
     status.classList.remove('error');
-    status.textContent = 'Example restored.';
+    report('Example restored. Click Run Python to see its results.');
   });
   stop.addEventListener('click', () => stopWorker('Run stopped.'));
-  function clearFigures() {
-    figures.replaceChildren();
-    figureUrls.splice(0).forEach(url => URL.revokeObjectURL(url));
-  }
   button.addEventListener('click', async () => {
     if (running) return;
     running = true;
     button.disabled = true;
     reset.disabled = true;
+    editor.readOnly = true;
     stop.hidden = false;
-    output.hidden = true;
-    clearFigures();
+    clearResults();
     status.classList.remove('error');
-    status.textContent = 'Starting Python…';
+    report('Starting Python…');
     try {
-      const result = await run(editor.value, example.packages, message => { status.textContent = message; });
+      const result = await run(editor.value, example.packages, report);
       if (!active) return;
       output.textContent = result.output;
       output.hidden = !result.output;
@@ -89,21 +102,22 @@ export function mountPython(container, example, storage) {
         img.alt = i === 0 ? example.figure : 'Additional figure from the Python experiment';
         figures.append(img);
       });
-      status.textContent = 'Run complete.';
+      report(result.output || result.figures.length ? 'Run complete.' : 'Run complete. This code produced no text or figures.');
     } catch (error) {
       if (!active) return;
       if (error.message === 'Run stopped.') {
-        status.textContent = error.message;
+        report('Run stopped. You can edit the code and run it again.');
         return;
       }
       status.classList.add('error');
-      status.textContent = 'Python could not complete this run.';
+      report('Python could not finish. See the error below.');
       output.textContent = error.message;
       output.hidden = false;
     } finally {
       if (active) {
         button.disabled = false;
         reset.disabled = false;
+        editor.readOnly = false;
         stop.hidden = true;
         running = false;
       }
@@ -111,7 +125,7 @@ export function mountPython(container, example, storage) {
   });
   return () => {
     active = false;
-    clearFigures();
+    clearResults();
     if (running) stopWorker('Lesson changed.');
   };
 }

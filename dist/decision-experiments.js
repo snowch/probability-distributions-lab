@@ -48,7 +48,7 @@ const se = experiment([
       line('Standard error', curve(1, 100, count => spread / Math.sqrt(count))),
       marks('Selected sample size', [{ x: n, y: error }])
     ], { xInteger: true, yLabel: 'Standard error', yMax: spread * 1.1 }),
-    metrics: [metric('Standard error at n = ' + n, num(error)), metric('If you quadrupled the sample size', num(error / 2))]
+    metrics: [metric('Standard error', num(error))]
   };
 });
 
@@ -79,7 +79,8 @@ const budgets = [[100, '100 runs'], [400, '400 runs'], [1000, '1,000 runs'], [40
 const mc = experiment([
   select('kind', 'Quantity to estimate', [['mean', 'Average outcome'], ['event', 'Event probability']], 'event'),
   select('n', 'Runs per estimate', budgets, 1000),
-  select('p', 'True event probability', [[.1, '10%'], [.01, '1%'], [.001, '0.1%'], [.0001, '0.01%']], .001)
+  { ...select('p', 'True event probability', [[.1, '10%'], [.01, '1%'], [.001, '0.1%'], [.0001, '0.01%']], .001),
+    showWhen: ['kind', 'event'] }
 ], ({ kind, n, p }) => {
   const standardError = count => kind === 'event' ? Math.sqrt(p * (1 - p) / count) : 10 / Math.sqrt(count);
   const error = standardError(n);
@@ -92,9 +93,9 @@ const mc = experiment([
       xTicks: [2, 3, 4, 5], xFormat: x => num(10 ** x, 0), yLabel: 'Standard error',
       yPercent: kind === 'event'
     }),
-    metrics: [metric('Standard error at this budget', kind === 'event' ? pct(error) + ' points' : num(error, 3)),
+    metrics: [metric('Standard error', kind === 'event' ? num(error * 100, 4) + ' percentage points' : num(error, 3)),
       ...(kind === 'event' ? [metric('Expected hits', num(n * p)), metric('Relative standard error', num(100 * error / p, 1) + '%')] : [])],
-    note: kind === 'mean' ? 'The model’s outcome standard deviation is 10 units.' : 'Relative standard error is the standard error divided by the true probability.'
+    note: kind === 'mean' ? 'The model’s outcome standard deviation is 10 units.' : ''
   };
 });
 
@@ -110,7 +111,7 @@ const zero = experiment([
       line('Probability of zero failures', curve(0, .16, chance, 320)),
       marks('Proposed rate', [{ x: rate, y: chance(rate) }])
     ], { xPercent: true, yPercent: true, yLabel: 'Chance of zero failures', yMax: 1, cuts: [cut(bound)] }),
-    metrics: [metric('Chance of zero failures at proposed rate', pct(chance(rate))), metric('95% one-sided upper limit', pct(bound))]
+    metrics: [metric('Chance of zero failures at proposed rate', pct(chance(rate))), metric('95% upper confidence limit', pct(bound))]
   };
 });
 
@@ -145,8 +146,8 @@ function inventoryResult({ stock, demand, shortage }) {
     chart: continuous('Units in stock', 0, 70, [
       line('Expected loss', losses), marks('Your stock level', [losses[stock]]), marks('Lowest expected loss', [optimum], 'neutral')
     ], { xInteger: true, yLabel: 'Expected loss (credits)' }),
-    metrics: [metric('Stockout risk at selected level', pct(probabilities.slice(stock + 1).reduce((sum, p) => sum + p, 0))),
-      metric('Expected loss at selected level', num(losses[stock].y) + ' credits'), metric('Lowest-loss stock level', optimum.x + ' units')],
+    metrics: [metric('Stockout risk at your stock level', pct(probabilities.slice(stock + 1).reduce((sum, p) => sum + p, 0))),
+      metric('Expected loss at your stock level', num(losses[stock].y) + ' credits'), metric('Lowest-loss stock level', optimum.x + ' units')],
     note: 'Leftover units cost 2 credits each.'
   };
 }
@@ -214,11 +215,11 @@ const scenario = select('scenario', 'Starting scenario', [
   ['delivery', 'A delivery promise'], ['inventory', 'Inventory stock'], ['staffing', 'Support staffing']
 ], 'delivery');
 const capstone = {
-  controls: [scenario, ...stressControls.map(control => ({ ...control, when: 'delivery' })),
-    ...inventoryControls.map(control => ({ ...control, when: 'inventory' })),
-    ...staffControls.map(control => ({ ...control, when: 'staffing' }))],
+  controls: [scenario, ...Object.entries(scenarios).flatMap(([name, model]) =>
+    model.controls.map(control => ({ ...control, showWhen: ['scenario', name] })))],
   compute: (values, seed) => scenarios[values.scenario].compute(values, seed),
-  resample: values => values.scenario === 'staffing'
+  // Use the same simulation draws when learners reopen the staffing scenario.
+  seed: 547
 };
 
 export const decisionExperiments = { averages, clt, se, bootstrap, mc, zero, decision, inventory, staffing, stress, capstone };
