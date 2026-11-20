@@ -89,9 +89,9 @@ export const modelling = [
       {
         slug: 'conditioning', title: 'What can you learn by conditioning on new information?', model: 'condition',
         intro: 'You planned for a mixture of dry and rainy days. The trip begins and you learn that it is raining.',
-        idea: 'A conditional distribution describes the times for a group you know the trip belongs to, such as rainy days. When you do not yet know the weather, the all-days model combines rainy and dry trips in proportion to their chances.',
+        idea: 'A conditional distribution describes outcomes for a group you know you are in. Here the outcome is trip time, and knowing the weather tells you which group to use.',
         predict: 'If the rainy-day trips are typically longer, which distribution would you use to plan today’s journey once you know it is raining?',
-        explore: 'Keep Chance of rain at 30%. In What you know, select Weather unknown, Dry day, then Rainy day. Compare Chance above 35 min. Raise Chance of rain to 70% and repeat. Which result changes when you change the forecast?',
+        explore: 'Keep Chance of rain at 30%. In What you know, select Weather unknown, Dry day, then Rainy day. Follow the branches in the diagram and compare Chance above 35 min. Raise Chance of rain to 70% and repeat. Which result changes when the forecast changes?',
         answer: 'Use the rainy-day distribution for today. Changing the chance of rain changes the all-days mixture, while the two conditional distributions in this model stay fixed.',
         transfer: 'What could you do if the only information available were a forecast saying “70% chance of rain”?'
       },
@@ -117,7 +117,7 @@ export const modelling = [
       {
         slug: 'project-deadline', title: 'Investigation · How likely is a project to miss its deadline?', model: 'deadline',
         intro: 'Your project has two workstreams behind a common kickoff. You can run the workstreams sequentially or in parallel.',
-        idea: 'In the sequential schedule, the workstream times add after kickoff. In the parallel schedule, both start after kickoff and the later finish sets the project duration. On a disrupted run, the page adds six days to each workstream in both schedules.',
+        idea: 'The parallel schedule assumes both tasks can start together after kickoff. On a disrupted run, the experiment adds six days to each task under both schedules.',
         predict: 'Which schedule will miss a fixed deadline less often? Could shared disruption still make the safer schedule miss?',
         explore: 'Keep Project deadline at 25 days and use the sample already shown. Set Chance of shared disruption to 0%, then 40%. At each setting, the two schedules use the same simulated task durations. Compare Parallel miss rate and Sequential miss rate. How much does disruption change the gap?',
         answer: 'The parallel schedule uses the longer of the two workstream durations and finishes no later than the sequential schedule in each run. Both can miss. Their miss rates and the gap between them can change when disruptions become more common.',

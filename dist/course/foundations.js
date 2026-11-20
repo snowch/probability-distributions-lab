@@ -6,7 +6,7 @@ export const foundations = [
       {
         slug: 'one-trial', title: 'What does one trial produce?', model: 'trial',
         intro: 'A coin toss can give you a yes or no. A ten-toss round gives you a head count. The same coin can answer different questions depending on what you record.',
-        idea: 'A random variable is the number you record from a trial. One trial is one complete round. For example, if a round has ten flips, the number of heads can be any whole number from 0 to 10. The horizontal axis lists the possible results.',
+        idea: 'A random variable is a number you record from a trial. Here one trial is one complete round, and the number you record is how many heads you got.',
         predict: 'If one round contains three flips, which head counts are possible? How many counts does that round add to the chart?',
         explore: 'The page starts with 20 rounds of three flips. In One round, choose One coin toss, then One die roll. Read the horizontal axis after each change. Which numbers can one round produce?',
         answer: 'Three flips can give 0, 1, 2, or 3 heads. One round adds one count, such as 2. A single toss gives 0 or 1 heads, and a single die roll gives a face value from 1 to 6.',
@@ -97,7 +97,7 @@ export const foundations = [
       {
         slug: 'hypergeometric', title: 'Hypergeometric · What changes when you sample without replacement?', model: 'hypergeometric',
         intro: 'A box has 20 parts, four of them faulty. You draw eight parts without putting any back. What does the count of faulty parts look like?',
-        idea: 'With replacement, you return each part to the box before the next draw. Without replacement, a part you draw stays out. A hypergeometric distribution accounts for how those removals change what can happen on the next draw.',
+        idea: 'A hypergeometric distribution gives the chance of each faulty-part count when you draw at random from a known batch without putting parts back.',
         predict: 'Can you find five faulty parts? Would a binomial model with a 20% fault probability assign that outcome any mass?',
         explore: 'At 8 for Parts inspected out of 20, set Faulty parts to compare to 5. Compare the probabilities for sampling with and without replacement. Then set Parts inspected out of 20 to 20 and Faulty parts to compare to 4. Why is one result now 100%?',
         answer: 'Without replacement, the faulty count cannot exceed four. At a full inspection it is exactly four. A binomial model leaves room for counts the finite box cannot produce.',

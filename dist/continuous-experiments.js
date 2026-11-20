@@ -81,7 +81,7 @@ const quantile = experiment([range('q', 'Percentile', 5, 99, 1, 90, '%')], ({ q 
 });
 
 const threeViews = experiment([
-  select('view', 'View', [['sample', 'Sample histogram'], ['density', 'Model density'], ['cdf', 'Model cumulative curve']], 'density'),
+  select('view', 'View', [['model', 'Model density and cumulative curve'], ['sample', 'Sample histogram']], 'model'),
   range('a', 'Endpoint A', 0, 16, .5, 3, ' min'),
   range('b', 'Endpoint B', 0, 16, .5, 8, ' min')
 ], ({ view, a, b }, seed) => {
@@ -90,19 +90,33 @@ const threeViews = experiment([
   const values = sample(300, () => expSample(rng, .2));
   const max = Math.max(20, Math.ceil(Math.max(...values)));
   const fn = x => expCdf(x, .2);
-  const cuts = [cut(lo), cut(hi)];
-  const charts = {
-    sample: () => continuous('Wait (minutes)', 0, max, [bars('Observed density', histogram(values, 22, 0, max))], { cuts }),
-    density: () => densityChart('Wait (minutes)', 0, 25, x => expPdf(x, .2), lo, hi, cuts),
-    cdf: () => continuous('Wait (minutes)', 0, 25, [
-      line('Cumulative probability', curve(0, 25, fn)), marks('Endpoints', [{ x: lo, y: fn(lo) }, { x: hi, y: fn(hi) }])
-    ], { yLabel: 'Cumulative probability', yPercent: true, yMax: 1, cuts })
-  };
+  const endpoints = lo === hi ? [{ x: lo, y: fn(lo) }] : [{ x: lo, y: fn(lo) }, { x: hi, y: fn(hi) }];
+  const cuts = endpoints.map(point => cut(point.x));
   const observed = values.filter(x => x >= lo && x <= hi).length / values.length;
+  const lower = fn(lo);
+  const upper = fn(hi);
+  const probability = upper - lower;
+  const rise = num(probability * 100) + ' percentage points';
+  const metrics = [metric('Observed share', pct(observed))];
+  if (view === 'sample') {
+    return {
+      chart: continuous('Wait (minutes)', 0, max, [bars('Observed density', histogram(values, 22, 0, max))], { cuts }),
+      metrics: [...metrics, metric('Shaded area', pct(probability)), metric('Cumulative rise', rise)]
+    };
+  }
   return {
-    chart: charts[view](),
-    metrics: [metric('Observed share', pct(observed)), metric('Area under the density', pct(fn(hi) - fn(lo))),
-      metric('Difference in cumulative probability', pct(fn(hi) - fn(lo)))]
+    chart: {
+      ...densityChart('Wait (minutes)', 0, 25, x => expPdf(x, .2), lo, hi, cuts),
+      height: 174, sharedXAxis: true
+    },
+    comparison: {
+      chart: continuous('Wait (minutes)', 0, 25, [
+        line('Cumulative probability', curve(0, 25, fn)), marks('Endpoints', endpoints)
+      ], { height: 174, yLabel: 'Cumulative probability', yPercent: true, yMax: 1, cuts, rise: endpoints }),
+      area: pct(probability),
+      rise: pct(upper) + ' by ' + num(hi) + ' min − ' + pct(lower) + ' by ' + num(lo) + ' min ≈ ' + rise
+    },
+    metrics
   };
 }, true);
 

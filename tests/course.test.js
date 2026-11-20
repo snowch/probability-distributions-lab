@@ -39,17 +39,50 @@ test('all experiment defaults, endpoints, and selectable views produce finite ch
     }
     for (const values of variants) {
       const result = model.compute(values, 513);
-      const chart = result.chart;
-      assert.ok(chart.xMax > chart.xMin, name);
-      assert.ok(chart.series.length && result.metrics.length, name);
-      for (const series of chart.series) {
-        assert.ok(series.points.length, name + ' has no points in ' + series.label);
-        for (const point of series.points) {
-          assert.ok(Number.isFinite(point.x) && Number.isFinite(point.y), name);
+      assert.ok(result.metrics.length, name);
+      for (const chart of [result.chart, result.comparison?.chart].filter(Boolean)) {
+        assert.ok(chart.xMax > chart.xMin, name);
+        assert.ok(chart.series.length, name);
+        for (const series of chart.series) {
+          assert.ok(series.points.length, name + ' has no points in ' + series.label);
+          for (const point of series.points) {
+            assert.ok(Number.isFinite(point.x) && Number.isFinite(point.y), name);
+          }
         }
       }
     }
   }
+});
+
+test('the model plots share endpoints and report the same interval probability as the sample view', () => {
+  const model = experiments['three-views'];
+  const settings = { a: 3, b: 8, view: 'model' };
+  const results = model.compute(settings, 518);
+  assert.deepEqual(results.chart.cuts, results.comparison.chart.cuts);
+  assert.equal(results.chart.xMin, results.comparison.chart.xMin);
+  assert.equal(results.chart.xMax, results.comparison.chart.xMax);
+  assert.equal(results.comparison.area, '34.69%');
+  assert.match(results.comparison.rise, /79\.81% by 8 min − 45\.12% by 3 min ≈ 34\.69 percentage points/);
+  assert.deepEqual(model.compute({ ...settings, a: 8, b: 3 }, 518), results);
+  const sample = model.compute({ ...settings, view: 'sample' }, 518);
+  assert.equal(sample.comparison, undefined);
+  assert.deepEqual(sample.metrics[0], results.metrics[0]);
+  assert.equal(sample.metrics[1].value, results.comparison.area);
+  const singlePoint = model.compute({ ...settings, a: 4, b: 4 }, 518);
+  assert.equal(singlePoint.chart.area, null);
+  assert.equal(singlePoint.comparison.area, '0%');
+});
+
+test('conditioning selects a weather branch without changing its conditional probability', () => {
+  const condition = experiments.condition;
+  const unknown = condition.compute({ rain: 30, group: 'all' });
+  const rainy = condition.compute({ rain: 30, group: 'high' });
+  const changedForecast = condition.compute({ rain: 70, group: 'high' });
+  assert.equal(unknown.metrics[1].value, '25.45%');
+  assert.equal(rainy.metrics[1].value, '84.13%');
+  assert.equal(rainy.weather.selected, 'high');
+  near(rainy.weather.rainLate, changedForecast.weather.rainLate);
+  assert.notEqual(rainy.weather.mixTail, changedForecast.weather.mixTail);
 });
 
 test('exact counts and cumulative probabilities match the worked examples', () => {

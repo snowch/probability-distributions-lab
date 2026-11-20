@@ -53,9 +53,9 @@ export const continuous = [
       {
         slug: 'three-probability-views', title: 'Investigation · Can you read the same probability three ways?', model: 'three-views',
         intro: 'Estimate the chance that a wait lasts between 3 and 8 minutes. Compare the simulated observations with two ways of reading the model.',
-        idea: 'The page generates a sample of 300 waits from one model. The observed share is the fraction of those waits between the endpoints. The model assigns the same probability to that interval whether you use the area under its density or subtract the cumulative probabilities at the two endpoints.',
+        idea: 'The page generates 300 waits from one model. The observed share is the fraction of those waits between the endpoints and can change with a new sample.',
         predict: 'Which two of the three results should agree exactly? Which can change if you take a fresh sample?',
-        explore: 'Keep Endpoint A at 3 min and Endpoint B at 8 min. Use View to select Sample histogram, Model density, and Model cumulative curve in turn. Click New sample, then compare Observed share, Area under the density, and Difference in cumulative probability. Which result changed?',
+        explore: 'Keep Endpoint A at 3 min and Endpoint B at 8 min. Follow the guides at those times across the model’s two charts. Compare Shaded area with Cumulative rise. Then choose Sample histogram in View and click New sample. Which of the three results changed?',
         answer: 'The model area and CDF difference agree. The observed fraction fluctuates around the model probability when the data are sampled from that model.',
         transfer: 'If the observed fraction remains systematically different in large samples, what might you question about the model?',
         python: 'three-views'

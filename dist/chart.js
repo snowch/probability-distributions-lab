@@ -60,11 +60,11 @@ function seriesMarks(series, x, y, baseline, plotWidth) {
 
 export function drawChart(svg, chart) {
   const width = Math.max(260, svg.clientWidth || 575);
-  const height = 276;
+  const height = chart.height ?? 276;
   const right = width - 17;
   const left = width < 370 ? 44 : 51;
   const top = 29;
-  const bottom = height - 52;
+  const bottom = height - (chart.sharedXAxis ? 10 : 52);
   const minY = chart.yMin ?? 0;
   const highest = Math.max(...chart.series.flatMap(series => series.points.map(point => point.y)));
   const maxY = chart.yMax ?? (highest > minY ? minY + (highest - minY) * 1.12 : minY + 1);
@@ -81,13 +81,15 @@ export function drawChart(svg, chart) {
     svg.append(svgNode('text', { x: left - 7, y: y(value) + 4, 'text-anchor': 'end', class: 'chart-tick' }, formatY(value)));
   }
   const xTicks = chart.xTicks ?? ticks(chart.xMin, chart.xMax, width < 390 ? 5 : 8, chart.xInteger);
-  for (const value of xTicks) {
-    svg.append(svgNode('line', { x1: x(value), x2: x(value), y1: bottom, y2: bottom + 5, class: 'chart-axis' }));
-    svg.append(svgNode('text', { x: x(value), y: bottom + 20, 'text-anchor': 'middle', class: 'chart-tick' }, formatX(value)));
+  if (!chart.sharedXAxis) {
+    for (const value of xTicks) {
+      svg.append(svgNode('line', { x1: x(value), x2: x(value), y1: bottom, y2: bottom + 5, class: 'chart-axis' }));
+      svg.append(svgNode('text', { x: x(value), y: bottom + 20, 'text-anchor': 'middle', class: 'chart-tick' }, formatX(value)));
+    }
+    svg.append(svgNode('text', { x: (left + right) / 2, y: height - 7, 'text-anchor': 'middle', class: 'chart-label' }, chart.xLabel));
   }
   svg.append(svgNode('line', { x1: left, x2: right, y1: bottom, y2: bottom, class: 'chart-axis' }));
   svg.append(svgNode('text', { x: left, y: 15, class: 'chart-label' }, chart.yLabel));
-  svg.append(svgNode('text', { x: (left + right) / 2, y: height - 7, 'text-anchor': 'middle', class: 'chart-label' }, chart.xLabel));
 
   if (chart.area?.length) {
     const first = chart.area[0];
@@ -111,5 +113,9 @@ export function drawChart(svg, chart) {
         x: position + (anchor === 'end' ? -5 : 5), y: top + 13, 'text-anchor': anchor, class: 'chart-cut-label'
       }, cut.label));
     }
+  }
+  if (chart.rise?.length === 2) {
+    const [from, to] = chart.rise;
+    svg.append(svgNode('path', { d: coords([from, to], x, y, true), class: 'chart-rise' }));
   }
 }

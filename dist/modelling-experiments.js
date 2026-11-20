@@ -141,7 +141,9 @@ function weatherModel(rain, gap, group, isCondition) {
   const first = 24;
   const second = first + gap;
   const mixPdf = x => (1 - weight) * normalPdf(x, first, 4) + weight * normalPdf(x, second, 4);
-  const mixTail = (1 - weight) * normalTail(35, first, 4) + weight * normalTail(35, second, 4);
+  const dryLate = normalTail(35, first, 4);
+  const rainLate = normalTail(35, second, 4);
+  const mixTail = (1 - weight) * dryLate + weight * rainLate;
   const all = line(isCondition ? 'All days' : 'Pooled distribution', curve(4, 70, mixPdf));
   const low = line(isCondition ? 'Dry days' : 'Weekdays', curve(4, 70, x => normalPdf(x, first, 4)), 'secondary', true);
   const high = line(isCondition ? 'Rainy days' : 'Weekends', curve(4, 70, x => normalPdf(x, second, 4)), 'neutral', true);
@@ -150,7 +152,8 @@ function weatherModel(rain, gap, group, isCondition) {
       cuts: [cut(35, '35 min')], yMax: .11
     }),
     metrics: [metric('Selected distribution mean', num(group === 'low' ? first : group === 'high' ? second : first + weight * gap) + ' min'),
-      metric('Chance above 35 min', pct(group === 'low' ? normalTail(35, first, 4) : group === 'high' ? normalTail(35, second, 4) : mixTail))]
+      metric('Chance above 35 min', pct(group === 'low' ? dryLate : group === 'high' ? rainLate : mixTail))],
+    weather: isCondition ? { rain: weight, dryLate, rainLate, selected: group, mixTail } : undefined
   };
 }
 

@@ -2,6 +2,7 @@ import { units, lessons } from './course/index.js';
 import { drawChart } from './chart.js';
 import { experiments } from './experiments.js';
 import { bars, discrete, points } from './experiment-utils.js';
+import { lessonDiagramMarkup, updateWeatherDiagram } from './lesson-diagrams.js';
 import { binomial } from './math.js';
 import { pythonExamples } from './python-examples.js';
 import { mountPython } from './python-ui.js';
@@ -160,24 +161,42 @@ function controlsMarkup(controls) {
 function experimentUI(lesson, settings) {
   const controls = Array.from(main.querySelectorAll('[data-control]'));
   const svg = query('#experiment-svg');
+  const alignedChart = query('#aligned-chart');
+  const weatherDiagram = query('#weather-diagram');
+  const chartArea = query('.experiment-chart');
   const run = query('#resample');
   let seed = settings.seed ?? (500 + lesson.number);
-  let chart;
+  let result;
   let scheduled = 0;
   const values = Object.fromEntries(settings.controls.map(control => [control.key, control.value]));
   function draw() {
-    if (chart) drawChart(svg, chart);
+    if (!result) return;
+    drawChart(svg, result.chart);
+    if (result.comparison) drawChart(alignedChart, result.comparison.chart);
   }
   const resize = new ResizeObserver(draw);
   resize.observe(svg);
+  if (alignedChart) resize.observe(alignedChart);
 
   function render() {
     scheduled = 0;
-    const result = settings.compute(values, seed);
-    chart = result.chart;
+    result = settings.compute(values, seed);
+    const { chart, comparison } = result;
+    if (alignedChart) {
+      chartArea.classList.toggle('has-comparison', Boolean(comparison));
+      query('#model-area-caption').hidden = !comparison;
+      query('#model-cumulative-view').hidden = !comparison;
+      if (comparison) {
+        query('#model-area-value').textContent = comparison.area;
+        query('#model-rise-value').textContent = comparison.rise;
+      }
+    }
     redrawControls();
     draw();
-    query('#legend').innerHTML = chart.series.map(series =>
+    if (weatherDiagram) updateWeatherDiagram(weatherDiagram, result.weather);
+    const legend = query('#legend');
+    legend.hidden = Boolean(comparison);
+    legend.innerHTML = chart.series.map(series =>
       '<span><i aria-hidden="true" class="legend-swatch series-' + series.color + ' is-' + series.type +
       (series.dashed ? ' is-dashed' : '') + '"></i>' + html(series.label) + '</span>').join('');
     query('#metrics').innerHTML = result.metrics.map(item => '<div><dt>' + html(item.label) +
@@ -265,7 +284,7 @@ function renderLesson(lesson) {
         <h1 id="lesson-title" tabindex="-1">${html(lesson.title)}</h1>
         <p>${html(lesson.intro)}</p>
       </header>
-      <section class="lesson-idea"><h2>The idea</h2><p>${html(lesson.idea)}</p></section>
+      <section class="lesson-idea"><h2>The idea</h2><p>${html(lesson.idea)}</p>${lessonDiagramMarkup(lesson.slug)}</section>
       <section class="predict"><h2>Make a prediction</h2><p>${html(lesson.predict)}</p></section>
       <section class="workbench" aria-labelledby="experiment-title">
         <h2 id="experiment-title">Experiment</h2><p>${html(lesson.explore)}</p>
@@ -276,6 +295,12 @@ function renderLesson(lesson) {
         </div>` : ''}
         <div class="experiment-chart">
           <svg id="experiment-svg" class="data-chart" role="img"></svg>
+          ${lesson.model === 'three-views' ? `
+            <p class="comparison-caption" id="model-area-caption" hidden><strong>Shaded area</strong> <span id="model-area-value"></span></p>
+            <div id="model-cumulative-view" hidden>
+              <svg id="aligned-chart" class="data-chart" role="img"></svg>
+              <p class="comparison-caption"><strong>Cumulative rise</strong> <span id="model-rise-value"></span></p>
+            </div>` : ''}
           <div id="legend" class="chart-legend"></div>
           <dl id="metrics" class="metric-grid" aria-live="polite"></dl>
           <p id="chart-note" class="chart-note" hidden></p>

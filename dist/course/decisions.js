@@ -6,7 +6,7 @@ export const decisions = [
       {
         slug: 'distribution-of-averages', title: 'What changes when you average a sample?', model: 'averages',
         intro: 'Individual waits can vary widely. Compare those waits with the averages you would get from repeating the same measurement study.',
-        idea: 'A statistic is a summary of a sample, such as its average. A sampling distribution shows the values that statistic could take across repeated samples of the same size. The average wait and an individual wait have the same expected value here, but different spreads.',
+        idea: 'A statistic is a number that summarizes a sample. A sampling distribution describes the values that statistic could take across repeated samples of the same size.',
         predict: 'Which varies more, one wait time or the average of 12 independent waits?',
         explore: 'Set Observations per sample to 1, then 12. Compare Spread of individual waits and Spread of sample averages. At 12, click New sample to repeat the simulated studies. Is the difference in spread still visible?',
         answer: 'With one observation, its average is the observation itself. With 12 independent observations per average, the averages usually stay closer to 5 minutes than individual waits do.',
