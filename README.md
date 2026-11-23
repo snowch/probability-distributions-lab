@@ -22,6 +22,7 @@ run through browser controls, and selected investigations include editable Pytho
 Use Node.js 22 or newer for tests and Python 3 for the static development server.
 
 ```sh
+python3 tools/vendor-python.py
 npm test
 python3 -m http.server 8000 --directory dist
 ```
@@ -31,10 +32,13 @@ source for the buildless site. Lesson copy lives in `dist/course/`. Experiment
 modules implement the interactive calculations and `dist/python-examples.js`
 contains the editable Python examples.
 
-The first Python run loads Pyodide 0.27.7 in a Web Worker. Python packages such
-as NumPy, SciPy, and Matplotlib are loaded as needed. The Seaborn lessons load
-the pinned Seaborn 0.13.2 wheel. The browser experiments work without those
-downloads. Progress, Python edits, and the capstone draft are stored in your
+The build bundles checksum-pinned Pyodide 0.27.7 and every package used by the
+examples, including NumPy, SciPy, Matplotlib, pandas and Seaborn 0.13.2. The first
+Python run loads these files from this lab in a Web Worker; there is no runtime CDN
+or PyPI fallback. Fonts and their OFL notices are bundled in `dist/fonts/`.
+Python package licence files remain inside the original wheels; the Pyodide
+licence is in `dist/vendor/pyodide/PYODIDE-LICENSE`. The browser experiments work
+without starting Python. Progress, Python edits, and the capstone draft are stored in your
 browser. The capstone can also be downloaded as Markdown.
 
 The distributions and data are teaching examples. The browser exhibits use

@@ -1,5 +1,5 @@
-const base = 'https://cdn.jsdelivr.net/pyodide/v0.27.7/full/';
-const seabornWheel = 'https://files.pythonhosted.org/packages/83/11/00d3c3dfc25ad54e731d91449895a79e4bf2384dc3ac01809010ba88f6d5/seaborn-0.13.2-py3-none-any.whl';
+const base = new URL('./vendor/pyodide/', import.meta.url).href;
+const seabornWheel = base + 'seaborn-0.13.2-py3-none-any.whl';
 let runtime;
 let seabornReady = false;
 
@@ -15,7 +15,7 @@ async function loadPackages(py, requested, code) {
   await py.loadPackage(['matplotlib', ...requested]);
   if (!seabornReady && (requested.includes('pandas') || /\b(?:from|import)\s+seaborn\b/.test(code))) {
     await py.loadPackage(['micropip', 'pandas']);
-    await py.runPythonAsync('import micropip\nawait micropip.install("' + seabornWheel + '")');
+    await py.runPythonAsync('import micropip\nawait micropip.install("' + seabornWheel + '", deps=False)');
     seabornReady = true;
   }
   await py.loadPackagesFromImports(code);
