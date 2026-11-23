@@ -1,0 +1,165 @@
+{
+  "kind": "probability",
+  "runs": [
+    {
+      "id": "coin",
+      "type": "result",
+      "figures": 1,
+      "output": "Matplotlib is building the font cache; this may take a moment.\nObserved mean: 4.86 \u00b7 Model mean: 5.00"
+    },
+    {
+      "id": "coin-evidence",
+      "type": "result",
+      "figures": 1,
+      "output": "Fair, chance of 7 or more: 17.19%\nBiased, chance of 7 or more: 64.96%"
+    },
+    {
+      "id": "geometric",
+      "type": "result",
+      "figures": 1,
+      "output": "On attempt 5: 8.19%\nBy attempt 5: 67.23%"
+    },
+    {
+      "id": "poisson",
+      "type": "result",
+      "figures": 1,
+      "output": "At least 8 chats: 5.11%"
+    },
+    {
+      "id": "histogram",
+      "type": "result",
+      "figures": 1,
+      "output": "Sample size: 150 \u00b7 Vertical scale: probability"
+    },
+    {
+      "id": "quantile",
+      "type": "result",
+      "figures": 1,
+      "output": "Threshold: 37.69 minutes \u00b7 Exceedance: 10.0%"
+    },
+    {
+      "id": "three-views",
+      "type": "result",
+      "figures": 1,
+      "output": "Observed share: 33.00%\nModel CDF difference: 34.69%"
+    },
+    {
+      "id": "normal",
+      "type": "result",
+      "figures": 1,
+      "output": "Chance of exceeding 38 min: 9.12%"
+    },
+    {
+      "id": "gamma",
+      "type": "result",
+      "figures": 1,
+      "output": "Observed mean: 25.22 min \u00b7 Model mean: 25.00 min"
+    },
+    {
+      "id": "lognormal",
+      "type": "result",
+      "figures": 1,
+      "output": "Original-scale median and 90th percentile: [19.85 33.56]"
+    },
+    {
+      "id": "fit",
+      "type": "result",
+      "figures": 1,
+      "output": "Fitted mean: 29.73 \u00b7 Fitted spread: 5.64"
+    },
+    {
+      "id": "qq",
+      "type": "result",
+      "figures": 1,
+      "output": "Largest observed: 85.19 \u00b7 Matching model quantile: 69.70"
+    },
+    {
+      "id": "delivery",
+      "type": "result",
+      "figures": 1,
+      "output": "Estimated late fraction (Normal): 3.87%\nEstimated late fraction (Lognormal): 6.37%\nObserved late: 7 out of 100"
+    },
+    {
+      "id": "sum",
+      "type": "result",
+      "figures": 1,
+      "output": "Mean: 32.27 min \u00b7 SD: 15.62 min\nExpected SD: 16.00 min"
+    },
+    {
+      "id": "dependence",
+      "type": "result",
+      "figures": 1,
+      "output": "Late: 16.93% \u00b7 Mean: 36.04 min \u00b7 SD: 10.16 min"
+    },
+    {
+      "id": "mixture",
+      "type": "result",
+      "figures": 1,
+      "output": "Observed weekend share: 28.9%"
+    },
+    {
+      "id": "deadline",
+      "type": "result",
+      "figures": 1,
+      "output": "Parallel miss rate: 6.96%\nSequential miss rate: 34.20%"
+    },
+    {
+      "id": "averages",
+      "type": "result",
+      "figures": 1,
+      "output": "Single-wait SD: 5.05 \u00b7 Average SD: 1.43"
+    },
+    {
+      "id": "clt",
+      "type": "result",
+      "figures": 1,
+      "output": "Mean: 0.021 \u00b7 SD: 0.996"
+    },
+    {
+      "id": "bootstrap",
+      "type": "result",
+      "figures": 1,
+      "output": "Observed: 30.94 minutes\nMiddle 90% of bootstrap estimates: 22.90 to 34.19"
+    },
+    {
+      "id": "mc",
+      "type": "result",
+      "figures": 1,
+      "output": "Expected hits: 1 \u00b7 Model standard error: 0.00100\nObserved standard deviation across repeats: 0.00100"
+    },
+    {
+      "id": "zero",
+      "type": "result",
+      "figures": 1,
+      "output": "Chance of no failures at 1.0%: 0.817907\nOne-sided 95% upper confidence limit: 13.911%"
+    },
+    {
+      "id": "inventory",
+      "type": "result",
+      "figures": 1,
+      "output": "Lowest-loss stock level: 29 \u00b7 Stockout risk at that level: 24.07%"
+    },
+    {
+      "id": "staffing",
+      "type": "result",
+      "figures": 1,
+      "output": "2 staff, overload estimate: 65.63%\n3 staff, overload estimate: 22.50%"
+    },
+    {
+      "id": "stress",
+      "type": "result",
+      "figures": 1,
+      "output": "Standard: 3.12 credits\nExpedited: 3.97 credits"
+    },
+    {
+      "id": "capstone",
+      "type": "result",
+      "figures": 1,
+      "output": "Stock 26: mean cost 14.15, stockout rate 45.3%\nStock 32: mean cost 14.10, stockout rate 10.7%"
+    }
+  ],
+  "blocked": [],
+  "failures": [],
+  "date": "2026-11-23",
+  "scope": "Fresh browser profile; all provided Python examples (probability) or SymPy/NumPy cold package paths (linear). Requests outside the lab denied. This is functional evidence, not evidence of learning effectiveness or complete offline support."
+}
