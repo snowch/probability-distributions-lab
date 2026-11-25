@@ -357,6 +357,7 @@ function renderLesson(lesson) {
   const cleanupExperiment = experimentUI(lesson, settings);
   const key = 'python:' + lesson.slug;
   const cleanupPython = python ? mountPython(main, python, {
+    id:lesson.slug,
     read: () => read(key, python.code),
     write: code => write(key, code)
   }) : () => {};
@@ -403,4 +404,8 @@ document.querySelector('.skip-link').addEventListener('click', event => {
   main.scrollIntoView({ block: 'start' });
 });
 window.addEventListener('hashchange', () => route());
+window.courseOffline?.registerReading('probability-settings',{isBusy:()=>false,save:()=>({memory:[...memory]}),restore:value=>{memory.clear();for(const [key,entry]of value.memory||[])memory.set(key,entry);cleanup();currentRoute='';route({initial:true});}});
 route({ initial: true });
+
+
+await window.courseOffline?.completeReadingSetup();

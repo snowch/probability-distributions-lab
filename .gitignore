@@ -3,3 +3,7 @@ __pycache__/
 node_modules/
 
 /dist/vendor/
+
+node_modules/
+.build/
+test-results/

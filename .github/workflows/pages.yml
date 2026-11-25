@@ -1,45 +1,86 @@
-name: Deploy the lab to GitHub Pages
-
+name: Check and deploy Probability Distributions Lab
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
-
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
 concurrency:
-  group: pages
-  cancel-in-progress: false
-
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  check:
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
         with:
-          node-version: 22
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-      - run: python tools/vendor-python.py
+          python-version: "3.12"
       - run: npm ci
-      - run: npm test
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:runtime
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - name: Verify every original example and existing browser journeys
+        run: npm test && npm run build && npm run test:runtime
+      - name: Verify offline contract, cold Python and guarded updates
+        run: CHROMIUM=$(node -e "console.log(require('playwright').chromium.executablePath())") npm run test:offline
+      - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          path: dist
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
+          name: browser-evidence
+          path: test-results
+      - uses: actions/upload-artifact@v4
+        if: github.event_name != 'pull_request'
+        with:
+          name: verified-course
+          include-hidden-files: true
+          path: .build/site
+  publish:
+    concurrency:
+      group: course-publication
+      cancel-in-progress: false
+    if: github.event_name != 'pull_request'
+    needs: check
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v5
+        with:
+          name: verified-course
+          path: .build/site
+      - name: Verify the downloaded publication artifact
+        run: node scripts/verify-offline-build.mjs .build/site
+      - name: Preserve assets for older open lessons
+        env:
+          PUBLISHED_COURSE_URL: https://snowch.github.io/probability-distributions-lab/
+        run: node scripts/retain-for-publish.mjs .build/site
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: github-pages-${{ github.run_attempt }}
+          path: .build/site
+      - name: Wait for Pages artifact visibility
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/publication.mjs wait github-pages-${{ github.run_attempt }}
       - uses: actions/deploy-pages@v4
         id: deploy
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}

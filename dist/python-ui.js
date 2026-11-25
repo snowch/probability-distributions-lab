@@ -1,4 +1,6 @@
 let worker;
+const savedRuns=new Map();
+const encode=bytes=>{let value='';for(let i=0;i<bytes.length;i+=8192)value+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(value);};
 let pending;
 let nextId = 0;
 
@@ -13,7 +15,7 @@ function getWorker() {
     }
     const { resolve, reject } = pending;
     pending = undefined;
-    if (data.type === 'error') reject(new Error(data.message));
+    if (data.type === 'error') reject(Object.assign(new Error(data.message),{category:data.category}));
     else resolve(data);
   });
   current.addEventListener('error', event => {
@@ -27,7 +29,7 @@ function getWorker() {
 function stopWorker(reason) {
   worker?.terminate();
   worker = undefined;
-  pending?.reject(new Error(reason));
+  pending?.reject(Object.assign(new Error(reason),{category:reason==='Run stopped.'?'cancelled':'asset'}));
   pending = undefined;
 }
 
@@ -52,10 +54,23 @@ export function mountPython(container, example, storage) {
   let active = true;
   let running = false;
   const figureUrls = [];
+  const stateID=storage.id;
   editor.value = storage.read();
   function report(message) {
     status.hidden = false;
     status.textContent = message;
+  }
+  function renderResult(result){clearResults();
+      output.textContent = result.output;
+      output.hidden = !result.output;
+      result.figures.forEach((bytes, i) => {
+        const img = document.createElement('img');
+        const url = URL.createObjectURL(new Blob([bytes], { type: 'image/png' }));
+        figureUrls.push(url);
+        img.src = url;
+        img.alt = i === 0 ? example.figure : 'Additional figure from the Python experiment';
+        figures.append(img);
+      });
   }
   function clearResults() {
     output.hidden = true;
@@ -92,16 +107,8 @@ export function mountPython(container, example, storage) {
     try {
       const result = await run(editor.value, example.packages, report);
       if (!active) return;
-      output.textContent = result.output;
-      output.hidden = !result.output;
-      result.figures.forEach((bytes, i) => {
-        const img = document.createElement('img');
-        const url = URL.createObjectURL(new Blob([bytes], { type: 'image/png' }));
-        figureUrls.push(url);
-        img.src = url;
-        img.alt = i === 0 ? example.figure : 'Additional figure from the Python experiment';
-        figures.append(img);
-      });
+      savedRuns.set(stateID,{output:result.output,figures:result.figures.map(encode)});
+      renderResult(result);
       report(result.output || result.figures.length ? 'Run complete.' : 'Run complete. This code produced no text or figures.');
     } catch (error) {
       if (!active) return;
@@ -111,6 +118,7 @@ export function mountPython(container, example, storage) {
       }
       status.classList.add('error');
       report('Python could not finish. See the error below.');
+      if(error.category==='asset'){const earlier=savedRuns.get(stateID);if(earlier)renderResult({output:earlier.output,figures:earlier.figures.map(b64=>Uint8Array.from(atob(b64),c=>c.charCodeAt(0)))});window.courseOffline?.experimentFilesUnavailable('Run Python');return;}
       output.textContent = error.message;
       output.hidden = false;
     } finally {
@@ -123,7 +131,13 @@ export function mountPython(container, example, storage) {
       }
     }
   });
+  const unregister=window.courseOffline?.registerReading('python-output',{
+   isBusy:()=>!!pending||running,
+   save:()=>({runs:[...savedRuns],source:editor.value,output:output.textContent,hidden:output.hidden,status:status.textContent,error:status.classList.contains('error')}),
+   restore:value=>{savedRuns.clear();for(const [id,result]of value.runs||[])savedRuns.set(id,result);editor.value=value.source;const result=savedRuns.get(stateID);if(result)renderResult({output:result.output,figures:result.figures.map(b64=>Uint8Array.from(atob(b64),c=>c.charCodeAt(0)))});output.textContent=value.output;output.hidden=value.hidden;status.textContent=value.status;status.hidden=false;status.classList.toggle('error',value.error);}
+  });
   return () => {
+    unregister?.();
     active = false;
     clearResults();
     if (running) stopWorker('Lesson changed.');

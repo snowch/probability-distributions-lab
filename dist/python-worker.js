@@ -27,12 +27,14 @@ self.addEventListener('message', async ({ data }) => {
   const output = [];
   const paths = [];
   let py;
+  let phase='asset';
   let namespace;
   try {
     if (!runtime) status('Loading Python in your browser…');
     py = await getRuntime();
     status('Loading the libraries this example uses…');
     await loadPackages(py, packages, code);
+    phase='execution';
     status('Running your Python code…');
     py.setStdout({ batched: line => output.push(line) });
     py.setStderr({ batched: line => output.push(line) });
@@ -67,7 +69,7 @@ self.addEventListener('message', async ({ data }) => {
     const figures = paths.map(path => py.FS.readFile(path));
     self.postMessage({ id, type: 'result', output: output.join('\n'), figures }, figures.map(figure => figure.buffer));
   } catch (error) {
-    self.postMessage({ id, type: 'error', message: [...output, error.message || String(error)].join('\n') });
+    self.postMessage({ id, type: 'error', category:phase, message: [...output, error.message || String(error)].join('\n') });
   } finally {
     if (py) {
       for (const path of paths) py.FS.unlink(path);
