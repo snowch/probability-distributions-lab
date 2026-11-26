@@ -365,3 +365,22 @@ input[type="range"] { width: 100%; margin: 0; min-height: 37px; accent-color: va
   .sample-diagram-flow > .diagram-arrow { transform: rotate(90deg); }
   .sample-diagram-chart { width: min(100%, 16rem); justify-self: center; }
 }
+
+/* Copyright © 2026 Christopher Snow. Theme roles preserve the existing course palette. */
+:root[data-theme="dark"] {
+  color-scheme:dark; --page:#101e2b; --surface:#172b3b; --ink:#e6f0f7;
+  --muted:#b4c6d4; --indigo:#add6f1; --accent:#8ce3ce; --line:#365061;
+  --soft:#203e3e; --chart-primary:#8ce3ce; --chart-secondary:#f5b188;
+  --chart-neutral:#b6bae6; --chart-grid:#344d5e; --chart-axis:#839eae; --chart-text:#c2d5e1;
+}
+[data-theme="dark"] .button:not(.hero .button) { background:#add6f1; color:#10283f; }
+[data-theme="dark"] .button-secondary:not(.hero .button-secondary) { background:var(--surface); color:var(--ink); border-color:var(--line); }
+[data-theme="dark"] .button:hover:not(.hero .button) { background:#c8e7fa; color:#10283f; }
+[data-theme="dark"] :is(.primer,.predict,.metric-grid div,.python-output,.transfer) { background:var(--soft); border-color:var(--line); color:var(--ink); }
+[data-theme="dark"] :is(.predict h2,.metric-grid dt,.lesson-menu [aria-current="page"]) { color:var(--accent); }
+[data-theme="dark"] .error { color:#ffb4ab; }
+
+@media (max-width:640px) {
+  .header-inner { flex-wrap:wrap; padding-block:12px; gap:8px; }
+  .global-nav { flex-wrap:wrap; margin-inline-start:auto; justify-content:flex-end; gap:8px; }
+}
